@@ -1,0 +1,14 @@
+[
+  {
+    "region": "California",
+    "capRateAvg": 0.054,
+    "roiAvg": 0.065,
+    "insight": "California multifamily properties average a 5.4% cap rate and 6.5% ROI; DSCR above 1.2 is considered healthy."
+  },
+  {
+    "region": "Texas",
+    "capRateAvg": 0.062,
+    "roiAvg": 0.072,
+    "insight": "Texas rentals yield higher cap rates (~6–6.5%) due to lower taxes and strong rent growth."
+  }
+]
