@@ -9,6 +9,13 @@ export interface PropertyForFinance {
   [k: string]: any;
 }
 
+export interface LegalPenalty {
+  type: 'hoa_restriction' | 'rental_limit' | 'zoning_issue' | 'permit_required' | 'general_compliance';
+  severity: 'low' | 'medium' | 'high';
+  description: string;
+  penalty: number; // points to deduct from affordability score
+}
+
 /** Inputs that the caller can pass explicitly (else fall back to assumptions or estimates). */
 export interface FinanceInputs {
   price: number;
@@ -16,6 +23,7 @@ export interface FinanceInputs {
   annualInterestRate: number; // e.g., 0.065 for 6.5%
   loanYears: number;          // 15, 30, etc.
   monthlyRent: number;
+  legalPenalties?: LegalPenalty[]; // Legal penalties to apply to affordability score
 }
 
 export interface FinanceAssumptions {

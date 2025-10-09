@@ -6,6 +6,7 @@ import type {
   FinanceSummary,
   FinanceAssumptions,
   PropertyForFinance,
+  LegalPenalty,
 } from "@/types/finance";
 
 /** Default knobs you can tweak globally or override per-request */
@@ -166,12 +167,17 @@ export function computeFinance(
     mortgage.annualDebtService > 0 ? noiAnnual / mortgage.annualDebtService : 0;
 
   // Affordability / Investment score (0-100, higher is better)
-  const affordabilityScore = scoreAffordability({
+  const baseAffordabilityScore = scoreAffordability({
     cashFlowMonthly,
     monthlyRent,
     dscr,
     assumptions,
   });
+
+  // Apply legal penalties if provided
+  const legalPenalties = inputs?.legalPenalties || [];
+  const legalPenaltyTotal = legalPenalties.reduce((sum, penalty) => sum + penalty.penalty, 0);
+  const affordabilityScore = Math.max(0, baseAffordabilityScore - legalPenaltyTotal);
 
   return {
     inputs: {
@@ -196,6 +202,82 @@ export function computeFinance(
     },
     assumptions,
   };
+}
+
+/**
+ * Analyze legal context and generate penalties for affordability scoring
+ */
+export function analyzeLegalPenalties(legalContext: any[]): LegalPenalty[] {
+  const penalties: LegalPenalty[] = [];
+  
+  for (const legal of legalContext) {
+    const text = legal.text.toLowerCase();
+    
+    // HOA restrictions - look for prohibited installations or HOA rules
+    if ((text.includes('hoa') && (text.includes('prohibited') || text.includes('restricted'))) ||
+        (text.includes('prohibited') && (text.includes('installation') || text.includes('unit'))) ||
+        text.includes('hoa rules')) {
+      penalties.push({
+        type: 'hoa_restriction',
+        severity: 'medium',
+        description: 'HOA restrictions limit property modifications',
+        penalty: 5
+      });
+    }
+    
+    // Rental limitations - look for Airbnb/STR limits or rental restrictions
+    if ((text.includes('rental') && (text.includes('limit') || text.includes('90 days') || text.includes('restricted'))) ||
+        (text.includes('airbnb') && (text.includes('limit') || text.includes('90 days'))) ||
+        (text.includes('short-term') && (text.includes('limit') || text.includes('restricted'))) ||
+        text.includes('rental restrictions')) {
+      penalties.push({
+        type: 'rental_limit',
+        severity: 'high',
+        description: 'Short-term rental restrictions affect income potential',
+        penalty: 10
+      });
+    }
+    
+    // Zoning issues
+    if (text.includes('zoning') && (text.includes('issue') || text.includes('non-compliant') || text.includes('requirement'))) {
+      penalties.push({
+        type: 'zoning_issue',
+        severity: 'high',
+        description: 'Zoning compliance issues may require permits',
+        penalty: 8
+      });
+    }
+    
+    // Permit requirements
+    if (text.includes('permit') && (text.includes('required') || text.includes('approval'))) {
+      penalties.push({
+        type: 'permit_required',
+        severity: 'low',
+        description: 'Additional permits may be required for modifications',
+        penalty: 3
+      });
+    }
+    
+    // General compliance
+    if (text.includes('compliance') || text.includes('regulation') || text.includes('ordinance')) {
+      penalties.push({
+        type: 'general_compliance',
+        severity: 'low',
+        description: 'Additional regulatory compliance requirements',
+        penalty: 2
+      });
+    }
+  }
+  
+  // Remove duplicates based on type
+  const uniquePenalties = penalties.reduce((acc, penalty) => {
+    if (!acc.some(p => p.type === penalty.type)) {
+      acc.push(penalty);
+    }
+    return acc;
+  }, [] as LegalPenalty[]);
+  
+  return uniquePenalties;
 }
 
 function scoreAffordability(params: {

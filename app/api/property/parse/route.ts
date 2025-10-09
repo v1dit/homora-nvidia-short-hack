@@ -1,6 +1,7 @@
 import { normalizeProperty } from '../../../../lib/normalize';
 import type { Property } from '../../../../types/property';
 import { fetchSmartyProperties } from '../../../../lib/smarty';
+import { fetchSmartyProperty } from '../../../../lib/smartyProperty';
 import { NextResponse } from 'next/server';
 import { parseListing } from '../../../../lib/scraper';
 import { mockProperties } from '../../../../app/data/mockProperties';
@@ -40,7 +41,14 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const url = searchParams.get('url');
+    const address = searchParams.get('address');
     const mock = searchParams.get('mock') === 'true';
+
+    // Direct address query mode (new functionality)
+    if (address) {
+      const property = await fetchSmartyProperty(address, mock);
+      return NextResponse.json(property);
+    }
 
     // mock mode (deterministic testing)
     if (mock) {
@@ -48,8 +56,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: true, smarty: true, data: property, mode: 'mock' });
     }
 
-    // live mode
-    if (!url) return NextResponse.json({ error: 'Missing URL' }, { status: 400 });
+    // live mode - URL scraping
+    if (!url) return NextResponse.json({ error: 'Missing URL or address parameter' }, { status: 400 });
 
     const scraped = await parseListing(url);
     const smarty = scraped?.address ? await fetchSmartyProperties(scraped.address as string) : null;

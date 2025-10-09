@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     // Build passthrough to your existing parse endpoint
     const parseUrl = new URL("/api/property/parse", base);
     // forward relevant query params
-    for (const key of ["url", "mock"]) {
+    for (const key of ["url", "address", "mock"]) {
       const v = searchParams.get(key);
       if (v !== null) parseUrl.searchParams.set(key, v);
     }
@@ -47,7 +47,13 @@ export async function GET(req: NextRequest) {
         { status: 502 }
       );
     }
-    const property: PropertyForFinance = await parsedRes.json();
+    const parseResult = await parsedRes.json();
+    
+    // Extract property data - handle both direct property and nested data structure
+    const property: PropertyForFinance = parseResult.data || parseResult;
+    
+    // For the response, we want to return the full property object
+    const fullProperty = parseResult;
 
     // Collect optional overrides from query
     const num = (k: string): number | null => {
@@ -57,13 +63,13 @@ export async function GET(req: NextRequest) {
       return Number.isFinite(n) ? n : null;
     };
 
-    // Inputs overrides
+    // Inputs overrides - use property data as defaults
     const inputs = {
-      price: num("price") ?? undefined,
+      price: num("price") ?? property.price,
       downPaymentPct: num("downPaymentPct") ?? undefined,
       annualInterestRate: num("annualInterestRate") ?? undefined,
       loanYears: num("loanYears") ?? undefined,
-      monthlyRent: num("monthlyRent") ?? undefined,
+      monthlyRent: num("monthlyRent") ?? property.est_rent ?? undefined,
     };
 
     // Assumption overrides
@@ -90,6 +96,19 @@ export async function GET(req: NextRequest) {
     const clean = <T extends Record<string, any>>(obj: T) =>
       Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as Partial<T>;
 
+    // Get legal context for penalty analysis
+    let legalPenalties: any[] = [];
+    try {
+      const { legalContext } = await retrieveContext(property, 3, 5);
+      legalPenalties = analyzeLegalPenalties(legalContext);
+      
+      // Add legal penalties to inputs
+      inputs.legalPenalties = legalPenalties;
+    } catch (e) {
+      console.warn('⚠️ Failed to retrieve legal context:', e);
+      legalPenalties = [];
+    }
+
     const finance = computeFinance(property, clean(inputs), clean(assumptions));
 
     let insights = null;
@@ -97,15 +116,22 @@ export async function GET(req: NextRequest) {
       insights = await generateRAGInsights(property, finance);
     } catch (e) {
       // non-fatal — continue with the response
-      insights = { summary: 'Insight generation failed', contextUsed: [] };
+      insights = { 
+        financialSummary: 'Insight generation failed', 
+        legalSummary: [],
+        contextUsed: [],
+        riskFactors: [],
+        recommendations: []
+      };
     }
 
     return NextResponse.json(
       {
-        property,
+        property: fullProperty,
         finance,
         defaults: FINANCE_DEFAULTS,
         insights,
+        legalPenalties,
       },
       { status: 200 }
     );
