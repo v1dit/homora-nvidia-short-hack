@@ -30,6 +30,42 @@ function getBaseUrl(req: NextRequest): string {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
+    // Fast-path demo: return deterministic mock payload when ?mock=true
+    if (searchParams.get('mock') === 'true') {
+      const demo = {
+        property: {
+          address: '123 Demo St, San Jose, CA',
+          price: 500000,
+        },
+        finance: {
+          inputs: { price: 500000, monthlyRent: 3500 },
+          mortgage: { loanAmount: 400000, monthlyPI: 2200 },
+          expenses: { totalMonthly: 900 },
+          metrics: {
+            grossIncomeMonthly: 3500,
+            noiMonthly: 2600,
+            noiAnnual: 31200,
+            capRate: 0.0624,
+            cashFlowMonthly: 300,
+            cashFlowAnnual: 3600,
+            cashOnCash: 8.4,
+            dscr: 1.25,
+            affordabilityScore: 85,
+          },
+          assumptions: {},
+        },
+        defaults: FINANCE_DEFAULTS,
+        insights: {
+          financialSummary: 'Demo: healthy cap rate and positive cash flow.',
+          legalSummary: [],
+          contextUsed: [],
+          riskFactors: [],
+          recommendations: [],
+        },
+      };
+
+      return NextResponse.json(demo, { status: 200 });
+    }
     const base = getBaseUrl(req);
 
     // Build passthrough to your existing parse endpoint
