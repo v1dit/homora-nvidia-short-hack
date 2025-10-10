@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { computeFinance, FINANCE_DEFAULTS } from "@/lib/finance";
+import { computeFinance, FINANCE_DEFAULTS, analyzeLegalPenalties } from "@/lib/finance";
 import { generateRAGInsights } from '@/lib/insights';
+import { retrieveContext } from '@/lib/rag';
 import type { PropertyForFinance } from "@/types/finance";
 
 /**
@@ -101,15 +102,14 @@ export async function GET(req: NextRequest) {
     try {
       const { legalContext } = await retrieveContext(property, 3, 5);
       legalPenalties = analyzeLegalPenalties(legalContext);
-      
-      // Add legal penalties to inputs
-      inputs.legalPenalties = legalPenalties;
     } catch (e) {
       console.warn('⚠️ Failed to retrieve legal context:', e);
       legalPenalties = [];
     }
 
-    const finance = computeFinance(property, clean(inputs), clean(assumptions));
+  // Pass legalPenalties via inputs when computing finance
+  const inputsWithLegal = { ...clean(inputs), legalPenalties } as any;
+  const finance = computeFinance(property, inputsWithLegal, clean(assumptions));
 
     let insights = null;
     try {

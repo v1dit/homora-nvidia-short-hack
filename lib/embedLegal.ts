@@ -1,6 +1,7 @@
-// lib/embedLegal.ts - Convert legal documents to embeddings for RAG retrieval
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
+dotenv.config();
 import { getEmbedder } from './rag';
 
 export interface LegalDocument {
@@ -148,7 +149,15 @@ export async function embedLegalDocuments(): Promise<LegalDocument[]> {
     for (const chunk of doc.chunks) {
       try {
         const embedding = await embedder.embed(chunk.text);
-        chunk.embedding = Array.isArray(embedding) ? embedding : [];
+        // normalize embedding: support number[] or number[][] -> flatten
+        if (Array.isArray(embedding) && Array.isArray(embedding[0])) {
+          // flatten nested arrays
+          chunk.embedding = (embedding as number[][]).flat();
+        } else if (Array.isArray(embedding)) {
+          chunk.embedding = embedding as number[];
+        } else {
+          chunk.embedding = [];
+        }
         totalChunks++;
       } catch (error) {
         console.error(`❌ Failed to embed chunk ${chunk.id}:`, error);

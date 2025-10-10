@@ -139,8 +139,8 @@ export async function generateRAGInsights(property: any, finance: FinanceSummary
       });
 
       const legalJson = await legalResp.json();
-      const legalContent = legalJson.choices?.[0]?.message?.content ?? '';
-      legalSummary = legalContent.split('\n').filter(line => line.trim().startsWith('•')).slice(0, 5);
+  const legalContent = legalJson.choices?.[0]?.message?.content ?? '';
+  legalSummary = legalContent.split('\n').filter((line: string) => line.trim().startsWith('•')).slice(0, 5);
 
       // Generate risk factors and recommendations
       riskFactors = [

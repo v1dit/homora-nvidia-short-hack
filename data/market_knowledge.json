@@ -11,4 +11,14 @@
     "roiAvg": 0.072,
     "insight": "Texas rentals yield higher cap rates (~6–6.5%) due to lower taxes and strong rent growth."
   }
+  ,
+  {
+    "region": "Cupertino, CA",
+    "price_appreciation": 0.065,
+    "rent_growth_rate": 0.045,
+    "vacancy_rate": 0.03,
+    "cap_rate_avg": 0.038,
+  "insight": "Cupertino market driven by Apple HQ proximity, top schools, and limited new construction; home prices rose ~80% since 2019 and cap rates are low (~3.8%).",
+  "notes": "Cupertino market driven by Apple HQ proximity, top schools, and limited new construction. Home prices rose ~80% since 2019."
+  }
 ]
