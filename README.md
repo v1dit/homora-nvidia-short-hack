@@ -1,36 +1,118 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Homora Mini
 
-## Getting Started
+AI-powered property analysis system for rapid real estate evaluation and decision support.
 
-First, run the development server:
+Results
+Model Type: Multi-stage analysis pipeline (LLM + structured processing)
+Core Representation: Property feature + financial inference pipeline
+Focus: Speed + usability + real-time decision support
+System Role: Input property → analyze → evaluate → actionable insights
+Implementation: Next.js (frontend) + Python service + API layer
+Overview
 
-```bash
+Homora is a property analysis system designed to evaluate real estate opportunities using a combination of structured data processing and AI-based reasoning.
+
+The system takes in property inputs and produces financial insights, evaluation metrics, and decision guidance in real time.
+
+It is designed as a fast, user-facing tool for rapid property evaluation rather than a full-scale underwriting system.
+
+Method / Approach
+Multi-Stage Pipeline
+
+Property analysis is decomposed into stages:
+
+property ingestion
+feature extraction
+financial estimation
+evaluation + scoring
+
+Each stage contributes structured signals to the final output.
+
+AI-Assisted Reasoning
+
+The system uses LLM-based reasoning to:
+
+interpret property context
+estimate missing values
+generate qualitative insights
+
+Fallback mock responses are supported for reliability when APIs are unavailable.
+
+Structured Financial Evaluation
+
+The pipeline estimates:
+
+pricing signals
+cost assumptions
+potential returns
+
+Outputs are normalized into consistent evaluation formats.
+
+Fast-Path Mocking
+
+To support demos and robustness:
+
+/api/analyze?mock=true returns simulated results
+system remains functional without external dependencies
+Data
+Type: property input + derived financial features
+Format: structured JSON objects
+Includes:
+property attributes
+inferred financial metrics
+evaluation outputs
+Pipeline
+property input → analyze → feature extraction → financial estimation → evaluation → output
+API
+
+Core route:
+
+POST /api/analyze
+
+Optional mock mode:
+
+POST /api/analyze?mock=true
+Experiments / Reproduction
+
+Run frontend:
+
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+http://localhost:3000
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Run Python service (if used):
 
-## Learn More
+cd python_service
+python main.py
+Dependencies
+Node.js
+Next.js
+TypeScript
+Python 3.x
+Repository Structure
+homora/
+├── app/                # Next.js frontend
+├── lib/                # core logic / API utilities
+├── data/               # sample / mock data
+├── python_service/     # backend analysis service
+├── scripts/            # test / eval scripts
+├── types/              # shared types
+├── public/
+└── README.md
+System Behavior Notes
+supports mock execution when APIs unavailable
+designed for demo + rapid evaluation workflows
+prioritizes speed over full financial accuracy
+combines structured logic with AI reasoning
+Summary
 
-To learn more about Next.js, take a look at the following resources:
+Homora is not a full real estate underwriting engine.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+It is a fast, AI-assisted property evaluation system that:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+analyzes properties
+estimates financial outcomes
+provides quick decision support
